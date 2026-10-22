@@ -18,12 +18,22 @@ export async function serve(
   const popup = `<!doctype html><form id="form"><button>Submit</button></form>
 <script>document.getElementById('form').addEventListener('submit', () => { document.title = 'submitted' })</script>`
 
+  // A card whose player refuses to be framed, as a player with `X-Frame-Options: DENY` does.
+  const denied = markup.replace('content="/player"', 'content="/denied"')
+
   const server = Http.createServer((request, response) => {
     const path = new URL(request.url ?? '/', 'http://localhost').pathname
     response.setHeader('content-type', 'text/html; charset=utf-8')
     // The devtools read card tags from the browser when the server cannot reach this host.
     response.setHeader('access-control-allow-origin', '*')
-    response.end(path === '/popup' ? popup : markup)
+    if (path === '/denied') response.setHeader('x-frame-options', 'DENY')
+    response.end(
+      (() => {
+        if (path === '/popup') return popup
+        if (path === '/blocked') return denied
+        return markup
+      })(),
+    )
   })
 
   const host = options.host ?? '127.0.0.1'

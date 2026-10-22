@@ -40,34 +40,41 @@ afterAll(async () => {
 })
 
 describe('GET /api/card', () => {
-  test('reads a local player card', async () => {
+  test('reads a local player card with its responses', async () => {
     const response = await fetch(
       `${devtools}/api/card?${new URLSearchParams({ url: `${player.origin}/` })}`,
     )
+    const result = await response.json()
 
-    expect(await response.json()).toMatchInlineSnapshot(
+    expect(result.card).toMatchInlineSnapshot(
       {
-        card: {
-          player: expect.stringMatching(/^http:\/\/127\.0\.0\.1:\d+\/player$/),
-          url: expect.stringMatching(/^http:\/\/127\.0\.0\.1:\d+\/$/),
-        },
+        player: expect.stringMatching(/^http:\/\/127\.0\.0\.1:\d+\/player$/),
+        url: expect.stringMatching(/^http:\/\/127\.0\.0\.1:\d+\/$/),
       },
       `
       {
-        "card": {
-          "card": "player",
-          "description": "Reports what X's player sandbox allows.",
-          "domain": "127.0.0.1",
-          "player": StringMatching /\\^http:\\\\/\\\\/127\\\\\\.0\\\\\\.0\\\\\\.1:\\\\d\\+\\\\/player\\$/,
-          "playerHeight": 360,
-          "playerWidth": 480,
-          "title": "Sandbox probe",
-          "url": StringMatching /\\^http:\\\\/\\\\/127\\\\\\.0\\\\\\.0\\\\\\.1:\\\\d\\+\\\\/\\$/,
+        "card": "player",
+        "description": "Reports what X's player sandbox allows.",
+        "domain": "127.0.0.1",
+        "player": StringMatching /\\^http:\\\\/\\\\/127\\\\\\.0\\\\\\.0\\\\\\.1:\\\\d\\+\\\\/player\\$/,
+        "playerHeight": 360,
+        "playerWidth": 480,
+        "tags": {
+          "twitter:card": "player",
+          "twitter:description": "Reports what X's player sandbox allows.",
+          "twitter:player": "/player",
+          "twitter:player:height": "360",
+          "twitter:player:width": "480",
+          "twitter:title": "Sandbox probe",
         },
-        "status": "ok",
+        "title": "Sandbox probe",
+        "url": StringMatching /\\^http:\\\\/\\\\/127\\\\\\.0\\\\\\.0\\\\\\.1:\\\\d\\+\\\\/\\$/,
       }
     `,
     )
+    expect(result.page).toMatchObject({ redirected: false, status: 200 })
+    expect(result.player).toMatchObject({ status: 200 })
+    expect(result.userAgent).toMatchInlineSnapshot(`"Twitterbot/1.0"`)
   })
 })
 
@@ -132,6 +139,21 @@ describe('preview', () => {
         "parent.document": "blocked",
       }
     `)
+    await page.close()
+  })
+
+  test('reports a player that refuses framing', async () => {
+    const page = await browser.newPage()
+    await page.goto(
+      `${devtools}/?${new URLSearchParams({ url: `${player.origin}/blocked` })}`,
+    )
+    await page.getByRole('tab', { name: /Checks/ }).click()
+
+    await expect
+      .poll(() =>
+        page.getByText('Player headers block framing by x.com').isVisible(),
+      )
+      .toBe(true)
     await page.close()
   })
 

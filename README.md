@@ -35,7 +35,13 @@ Open the devtools, then paste a page URL or a player URL. The URL also loads fro
 http://localhost:3000/__xframe/?url=https://nanocode.xyz/cloudflare
 ```
 
-The server reads the page's card tags with X's crawler user agent, `Twitterbot/1.0`. Card checks report what X would render, and the frame policy lists the sandbox tokens that X grants and blocks.
+The server reads the page's card tags with X's crawler user agent, `Twitterbot/1.0`, and fetches the player document and poster image. The post renders on the left. The inspector on the right shows:
+
+- **Metrics:** response time, and the sizes of the page, the player document, and the poster image.
+- **Card tags:** each `twitter:*` and `og:*` tag, marked with the result of the checks that cover it.
+- **Checks:** what X would render, including whether the player's `X-Frame-Options` or `frame-ancestors` lets x.com frame it.
+- **Frame policy:** the sandbox tokens that X grants and blocks, and the frame's `allow` list.
+- **Request and headers:** the status, redirects, user agent, and the player's response headers that affect framing.
 
 ### Local Players
 

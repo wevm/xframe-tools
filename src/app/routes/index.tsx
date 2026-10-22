@@ -75,18 +75,18 @@ async function load(input: string): Promise<Preview.State> {
     }
   })()
   if (server.status === 'ok')
-    return { card: server.card, from: 'server', status: 'ready' }
+    return { from: 'server', report: server, status: 'ready' }
 
   if (Card.isLoopback(url)) {
     const browser = await Crawl.read({ headers: {}, url: url.href })
     if (browser.status === 'ok')
-      return { card: browser.card, from: 'browser', status: 'ready' }
+      return { from: 'browser', report: browser, status: 'ready' }
   }
 
   return {
-    card: Card.direct(url.href),
     from: 'direct',
     note: server.message,
+    report: { card: Card.direct(url.href) },
     status: 'ready',
   }
 }

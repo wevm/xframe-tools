@@ -27,6 +27,8 @@ export type Card = {
   playerWidth: number | undefined
   /** `twitter:site` handle. */
   site: string | undefined
+  /** Raw `twitter:*` and `og:*` tags in document order, first occurrence of each. */
+  tags: Record<string, string>
   /** Card title. */
   title: string | undefined
   /** Page the card was read from. */
@@ -39,6 +41,8 @@ export type Check = {
   level: 'fail' | 'pass' | 'warn'
   /** What was checked. */
   message: string
+  /** Card tags the check covers. */
+  tags: readonly string[]
 }
 
 /** Reads card tags from a page's markup, resolving relative URLs against the page. */
@@ -80,6 +84,12 @@ export function parse(options: parse.Options): Card {
     playerHeight: number(read('twitter:player:height')),
     playerWidth: number(read('twitter:player:width')),
     site: read('twitter:site'),
+    tags: Object.fromEntries(
+      [...tags].filter(
+        (entry) =>
+          entry[0].startsWith('twitter:') || entry[0].startsWith('og:'),
+      ),
+    ),
     title: read('twitter:title', 'og:title') ?? title(options.markup),
     url: options.url,
   }
@@ -105,6 +115,7 @@ export function direct(url: string): Card {
     playerHeight: fallbackSize.height,
     playerWidth: fallbackSize.width,
     site: undefined,
+    tags: {},
     title: undefined,
     url,
   }
@@ -117,34 +128,45 @@ export function direct(url: string): Card {
  * width and height. It frames only HTTPS players, and it never shows a player
  * taller than it is wide.
  */
-export function check(card: Card): readonly Check[] {
+export function check(
+  card: Card,
+  options: check.Options = {},
+): readonly Check[] {
   const checks: Check[] = []
   const player = card.player ? URL.parse(card.player) : null
   const local = player !== null && isLoopback(player)
+  const size = ['twitter:player:height', 'twitter:player:width']
 
   checks.push(
     card.card === 'player'
-      ? { level: 'pass', message: 'twitter:card is "player"' }
+      ? {
+          level: 'pass',
+          message: 'twitter:card is "player"',
+          tags: ['twitter:card'],
+        }
       : {
           level: 'fail',
           message: card.card
             ? `twitter:card is "${card.card}", so X renders a link card`
             : 'twitter:card is missing, so X renders a link card',
+          tags: ['twitter:card'],
         },
   )
 
   checks.push(
     (() => {
+      const tags = ['twitter:player']
       if (!player)
-        return { level: 'fail', message: 'twitter:player is missing' }
+        return { level: 'fail', message: 'twitter:player is missing', tags }
       if (player.protocol === 'https:')
-        return { level: 'pass', message: 'twitter:player uses HTTPS' }
+        return { level: 'pass', message: 'twitter:player uses HTTPS', tags }
       if (local)
         return {
           level: 'warn',
           message: 'twitter:player is a local HTTP URL, which X will not frame',
+          tags,
         }
-      return { level: 'fail', message: 'twitter:player must use HTTPS' }
+      return { level: 'fail', message: 'twitter:player must use HTTPS', tags }
     })(),
   )
 
@@ -153,11 +175,13 @@ export function check(card: Card): readonly Check[] {
       ? {
           level: 'pass',
           message: `Player is ${card.playerWidth}×${card.playerHeight}`,
+          tags: size,
         }
       : {
           level: 'fail',
           message:
             'twitter:player:width and twitter:player:height are required',
+          tags: size,
         },
   )
 
@@ -169,24 +193,131 @@ export function check(card: Card): readonly Check[] {
     checks.push({
       level: 'warn',
       message: 'X shows players at most 1:1, so this player renders square',
+      tags: size,
     })
 
   checks.push(
     card.title
-      ? { level: 'pass', message: 'Card has a title' }
-      : { level: 'fail', message: 'twitter:title or og:title is required' },
-  )
-
-  checks.push(
-    card.image
-      ? { level: 'pass', message: 'Card has a poster image' }
+      ? {
+          level: 'pass',
+          message: 'Card has a title',
+          tags: ['twitter:title', 'og:title'],
+        }
       : {
-          level: 'warn',
-          message: 'twitter:image is missing, so X shows no poster',
+          level: 'fail',
+          message: 'twitter:title or og:title is required',
+          tags: ['twitter:title', 'og:title'],
         },
   )
 
+  checks.push(
+    (() => {
+      const tags = ['twitter:image', 'og:image']
+      if (!card.image)
+        return {
+          level: 'warn',
+          message: 'twitter:image is missing, so X shows no poster',
+          tags,
+        }
+      if (options.imageBytes !== undefined && options.imageBytes > imageLimit)
+        return {
+          level: 'warn',
+          message: `Poster image is over ${imageLimit / 1024 / 1024}MB, so X may not show it`,
+          tags,
+        }
+      return { level: 'pass', message: 'Card has a poster image', tags }
+    })(),
+  )
+
+  if (options.headers) {
+    const headers = options.headers
+    const x = frameable({ ancestor: 'https://x.com', headers })
+    checks.push(
+      x
+        ? {
+            level: 'pass',
+            message: 'Player headers allow framing by x.com',
+            tags: [],
+          }
+        : {
+            level: 'fail',
+            message:
+              'Player headers block framing by x.com (X-Frame-Options or frame-ancestors)',
+            tags: [],
+          },
+    )
+
+    if (
+      x &&
+      options.origin &&
+      !frameable({ ancestor: options.origin, headers })
+    )
+      checks.push({
+        level: 'warn',
+        message:
+          'Player headers allow x.com but block this devtools origin, so the preview stays blank here',
+        tags: [],
+      })
+  }
+
   return checks
+}
+
+export declare namespace check {
+  type Options = {
+    /** Player response headers, by lowercase name, for framing checks. */
+    headers?: Record<string, string> | undefined
+    /** Poster image size in bytes. */
+    imageBytes?: number | undefined
+    /** Origin of the devtools page, which frames the player in place of x.com. */
+    origin?: string | undefined
+  }
+}
+
+/** Largest poster image X accepts for a card, in bytes. */
+export const imageLimit = 5 * 1024 * 1024
+
+/**
+ * Reports whether a player's response headers let an ancestor frame it, from
+ * `X-Frame-Options` and the CSP `frame-ancestors` directive. A CSP with
+ * `frame-ancestors` takes precedence over `X-Frame-Options`, as in browsers.
+ */
+export function frameable(options: frameable.Options): boolean {
+  const csp = options.headers['content-security-policy']
+  const directive = csp
+    ?.split(';')
+    .map((entry) => entry.trim().split(/\s+/))
+    .find((entry) => entry[0]?.toLowerCase() === 'frame-ancestors')
+
+  if (directive) {
+    const ancestor = new URL(options.ancestor)
+    return directive.slice(1).some((source) => {
+      const value = source.toLowerCase()
+      if (value === '*') return true
+      if (value === `${ancestor.protocol}`) return true
+      if (value === "'none'" || value === "'self'") return false
+      const parsed = URL.parse(
+        value.includes('://') ? value : `${ancestor.protocol}//${value}`,
+      )
+      if (!parsed || parsed.protocol !== ancestor.protocol) return false
+      const host = parsed.hostname
+      if (host.startsWith('%2a.') || host.startsWith('*.'))
+        return ancestor.hostname.endsWith(host.slice(host.indexOf('.')))
+      return host === ancestor.hostname
+    })
+  }
+
+  const xfo = options.headers['x-frame-options']?.trim().toLowerCase()
+  return xfo !== 'deny' && xfo !== 'sameorigin'
+}
+
+export declare namespace frameable {
+  type Options = {
+    /** Origin of the framing document, such as `https://x.com`. */
+    ancestor: string
+    /** Player response headers, by lowercase name. */
+    headers: Record<string, string>
+  }
 }
 
 /** Returns the aspect ratio X applies to a player, which is never taller than square. */
