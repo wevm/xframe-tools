@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="twitter:card" content="player" />
+    <meta name="twitter:title" content="Sandbox probe" />
+    <meta
+      name="twitter:description"
+      content="Reports what X's player sandbox allows."
+    />
+    <meta name="twitter:player" content="/player" />
+    <meta name="twitter:player:width" content="480" />
+    <meta name="twitter:player:height" content="360" />
+    <title>Sandbox probe</title>
+    <style>
+      body {
+        background: #0a0a0a;
+        color: #ededed;
+        font:
+          14px/1.5 ui-monospace,
+          monospace;
+        margin: 0;
+        padding: 16px;
+      }
+      li[data-result='blocked'] {
+        color: #ff6166;
+      }
+      li[data-result='allowed'] {
+        color: #62c073;
+      }
+      ul {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+      }
+      button {
+        margin-top: 8px;
+      }
+    </style>
+  </head>
+  <body>
+    <ul id="results"></ul>
+    <form id="form"><button type="submit">Submit form</button></form>
+    <button id="popup" type="button">Open popup</button>
+    <script>
+      const results = document.getElementById('results')
+      const report = (name, allowed, detail) => {
+        const item = document.createElement('li')
+        item.dataset.probe = name
+        item.dataset.result = allowed ? 'allowed' : 'blocked'
+        item.textContent = `${allowed ? 'allowed' : 'blocked'}  ${name}${detail ? ` (${detail})` : ''}`
+        results.append(item)
+      }
+      const attempt = (name, fn) => {
+        try {
+          const detail = fn()
+          report(name, true, detail)
+        } catch (error) {
+          report(name, false, error.name)
+        }
+      }
+
+      report('framed', window !== window.top)
+      report('origin', self.origin !== 'null', self.origin)
+      attempt('document.cookie', () => {
+        document.cookie = 'probe=1; SameSite=None; Secure'
+        return document.cookie.includes('probe') ? undefined : 'not stored'
+      })
+      attempt('localStorage', () => void localStorage.setItem('probe', '1'))
+      attempt('parent.document', () => void window.parent.document.title)
+      report(
+        'alert',
+        (() => {
+          const started = performance.now()
+          // A sandbox without allow-modals ignores alert() and returns at once.
+          window.confirm('probe')
+          return performance.now() - started > 50
+        })(),
+        'confirm() returned at once when blocked',
+      )
+
+      document
+        .getElementById('form')
+        .addEventListener('submit', () => report('form submission', true))
+      document.addEventListener('securitypolicyviolation', (event) =>
+        report('csp', false, event.violatedDirective),
+      )
+      document.getElementById('popup').addEventListener('click', () => {
+        const popup = window.open(
+          '/popup',
+          'probe',
+          'popup,width=400,height=300',
+        )
+        report('window.open', popup !== null)
+      })
+    </script>
+  </body>
+</html>

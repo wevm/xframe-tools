@@ -1,0 +1,15 @@
+name: Policy
+on:
+  schedule:
+    - cron: '17 6 * * *'
+  workflow_dispatch:
+jobs:
+  drift:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      # Fails when X changes the cards-frame sandbox, permissions, markup, or headers.
+      - run: node scripts/policy.ts --check

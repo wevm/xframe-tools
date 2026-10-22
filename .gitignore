@@ -1,0 +1,6 @@
+.env
+.void
+.void-wrangler.jsonc
+dist
+node_modules
+test-results
