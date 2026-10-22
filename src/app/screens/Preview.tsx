@@ -1,7 +1,6 @@
 /** Renders a player card in X's timeline layout beside its metrics, checks, and network details. @module */
 import { type FormEvent, type ReactNode, useState } from 'react'
 import { style, variants } from 'zyzz/default'
-import { base } from '../../internal/Base.ts'
 import * as Card from '../../internal/Card.ts'
 import type * as Crawl from '../../internal/Crawl.ts'
 import * as Policy from '../../internal/Policy.ts'
@@ -200,7 +199,7 @@ declare namespace Post {
 
 function Player(props: Player.Props) {
   const card = props.report.card
-  const src = `${base}/i/cards-frame?${new URLSearchParams({ player: card.player ?? card.url })}`
+  const src = `${import.meta.env.BASE_URL}i/cards-frame?${new URLSearchParams({ player: card.player ?? card.url })}`
 
   return (
     <>
@@ -768,12 +767,15 @@ namespace styles {
     paddingRight: 4,
   })
 
+  // The transparent top border balances the underline, centering the label.
   export const tab = variants({
     base: {
       alignItems: 'center',
       backgroundColor: 'transparent !custom',
       border: 'none',
       borderBottom: '2px solid',
+      borderTop: '2px solid',
+      borderTopColor: 'transparent !custom',
       cursor: 'pointer',
       display: 'inline-flex',
       flexShrink: 0,
@@ -833,7 +835,7 @@ namespace styles {
   export const status = style({
     alignItems: 'center',
     color: 'green.900',
-    display: 'inline-flex',
+    display: 'flex',
     gap: 1,
     '@media (min-width: 40rem)': { justifyContent: 'flex-end' },
   })
@@ -844,7 +846,9 @@ namespace styles {
     margin: 0,
   })
 
+  // The last row keeps a transparent border to match the other rows' height.
   export const fact = style({
+    alignItems: 'center',
     borderBottom: '1px solid',
     borderBottomColor: 'gray.400',
     columnGap: 4,
@@ -854,7 +858,7 @@ namespace styles {
     paddingTop: 2,
     rowGap: 1,
     typography: 'copy.14',
-    ':last-child': { borderBottom: 'none' },
+    ':last-child': { borderBottomColor: 'transparent !custom' },
     '@media (min-width: 40rem)': {
       gridTemplateColumns: 'minmax(0, 10rem) minmax(0, 1fr) !custom',
     },

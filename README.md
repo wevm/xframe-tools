@@ -66,9 +66,11 @@ pnpm check:policy     # compare the captured policy with X's live cards-frame
 pnpm update:policy    # capture X's live cards-frame policy again
 pnpm build            # build the package: the app into dist/app, and the entries into dist/lib
 pnpm changeset        # describe a change for the next release
-pnpm deploy           # deploy with void deploy
+pnpm run deploy       # deploy to https://xframe.tools with void deploy
 ```
 
-Pushes to `main` open a version pull request with Changesets. When it merges, the release workflow publishes `xframe-tools` to npm.
+`pnpm run deploy` builds with `XFRAME_BASE=/`, so xframe.tools serves the devtools at its root. Other builds, the package's included, serve them under `/__xframe`. The Main workflow deploys each push to `main` after its checks pass, using the `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` repository secrets.
+
+Pushes to `main` also open a version pull request with Changesets. When it merges, the Main workflow publishes `xframe-tools` to npm.
 
 `node test/fixtures/Player.ts` serves a probe player at `http://127.0.0.1:5173`. It reports which capabilities the sandbox allows, and it opens a popup with a form.

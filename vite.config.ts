@@ -44,7 +44,10 @@ export default defineConfig({
     : [
         voidPlugin(),
         zyzz({ exclude: ['internal/**', 'routeTree.gen.ts'] }),
-        tanstackStart({ router: { basepath: base }, srcDirectory: 'src/app' }),
+        tanstackStart({
+          router: { basepath: base || '/' },
+          srcDirectory: 'src/app',
+        }),
         react(),
       ],
   test: {

@@ -23,6 +23,12 @@ const types = {
   '.woff2': { text: false, type: 'font/woff2' },
 } as const
 
+// `Devtools` matches requests under the default base, which the package's build always serves.
+if (process.env.XFRAME_BASE)
+  throw new Error(
+    'XFRAME_BASE is set. Unset it to build the package, which serves the devtools under `/__xframe`.',
+  )
+
 // Vitest sets `NODE_ENV=test`, which would build with `import.meta.env.DEV` set, so the build runs
 // without it, as in production.
 const { NODE_ENV: _mode, VITEST: _, ...env } = process.env

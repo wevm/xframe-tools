@@ -5,7 +5,12 @@
  */
 import handlers from '#app'
 import assets from '#assets'
-import { base } from './internal/Base.ts'
+
+/**
+ * Mount path of the package's build. `scripts/app.ts` builds the app without `XFRAME_BASE`, so it
+ * is `Base.base`'s default. The package reads no `process.env`, which a Worker may not have.
+ */
+const base = '/__xframe'
 
 /**
  * Creates the devtools' fetch handler. It serves every page, asset, and endpoint under `base`
@@ -41,18 +46,11 @@ export function create(): create.ReturnType {
 
       // The app reads no bindings. The host's own, such as its `ASSETS`, never reach it, so the
       // app's asset lookups miss and its pages render on the server.
-      const response = await handlers.fetch(
+      return handlers.fetch(
         request,
         {},
         ctx ?? { passThroughOnException() {}, waitUntil() {} },
       )
-
-      // `void.config.ts` sets this header on the page for the hosted devtools. X's timeline page
-      // opens popups with the opener kept.
-      if (path !== base && path !== `${base}/`) return response
-      const page = new Response(response.body, response)
-      page.headers.set('cross-origin-opener-policy', 'same-origin-allow-popups')
-      return page
     },
   }
 }

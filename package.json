@@ -7,7 +7,7 @@
     "check": "vp check --fix",
     "check:policy": "node scripts/policy.ts --check",
     "check:types": "tsc",
-    "deploy": "void deploy",
+    "deploy": "XFRAME_BASE=/ void deploy --platform cloudflare",
     "dev": "vp dev --port 3000",
     "test": "vp test",
     "update:policy": "node scripts/policy.ts"
