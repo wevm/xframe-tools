@@ -11,7 +11,7 @@ Source blob: `c011a86d47f2991c8803c6533b4d3a8569282261` at commit `be0ca7d`. Ret
 - `src/internal/policy.json` is the authoritative capture of X's cards-frame. `pnpm update:policy` writes it from `https://x.com/i/cards-frame/<postId>`, and nothing else edits it. The cards-frame route serves the captured markup and headers verbatim, with only the nonce and player URL substituted.
 - Values that come from X's web client bundle and not from the cards-frame response, such as the timeline iframe's `allow` attribute, live in `Policy.timeline` with a comment naming their source.
 - A relaxation needed for local development, such as framing a loopback player, is reported in `Policy.render`'s `deviations`, in the `x-xframe-deviations` header, and in the page's checks. Never relax a policy silently.
-- Card checks mirror X's rendering rules. Each `fail` names a condition under which X renders no player. Each `warn` names a condition under which X renders a player that differs from the preview. Each check lists the card tags it covers, which the card tags table marks.
+- Card checks mirror X's rendering rules. Each `fail` names a condition under which X renders no player. Each `warn` names a condition under which X renders a player that differs from the preview.
 - The player must be cross-site from the devtools page, as it is from `x.com`. Same-site framing hides storage partitioning and gives the sandboxed player access to its parent, so the page reports it as a failed check.
 - Every page, asset, and endpoint is served under `base` (`/__xframe`), so a host app can mount the build on one path.
 
@@ -103,7 +103,7 @@ Applies to documentation, comments, TSDoc, commit messages, and pull requests.
 ## UI Conventions
 
 - Name route page components `Page` and register them with `component: Page`.
-- The page uses X's dark scheme. An address bar spans the top. The left column renders the post and its card as X's timeline does, without X's navigation sidebar or trending column. The right column is the inspector: response metrics, then tabs for card tags, checks, frame policy, request, and headers. Below `64rem` the columns stack.
+- The page uses X's dark scheme. An address bar spans the top. The left column renders the post and its card as X's timeline does, without X's navigation sidebar or trending column. The right column is the inspector, a stack of cards: response metrics, checks, the frame policy, and a network card with request and headers tabs. Below `64rem` the columns stack.
 - Screens in `src/app/screens/` take data and handlers as props. Routes own loading and navigation.
 - Prefer `zyzz/default` variables and typography tokens. Write a value with ` !custom` only when no default token expresses the design.
 - Group a module's styles in `namespace styles` at the bottom of the file, with `styles.card()` at application sites. Separate adjacent `style` definitions with one blank line.

@@ -38,10 +38,9 @@ http://localhost:3000/__xframe/?url=https://nanocode.xyz/cloudflare
 The server reads the page's card tags with X's crawler user agent, `Twitterbot/1.0`, and fetches the player document and poster image. The post renders on the left. The inspector on the right shows:
 
 - **Metrics:** response time, and the sizes of the page, the player document, and the poster image.
-- **Card tags:** each `twitter:*` and `og:*` tag, marked with the result of the checks that cover it.
 - **Checks:** what X would render, including whether the player's `X-Frame-Options` or `frame-ancestors` lets x.com frame it.
 - **Frame policy:** the sandbox tokens that X grants and blocks, and the frame's `allow` list.
-- **Request and headers:** the status, redirects, user agent, and the player's response headers that affect framing.
+- **Network:** request and headers tabs, with the status, redirects, user agent, and the player's response headers that affect framing.
 
 ### Local Players
 

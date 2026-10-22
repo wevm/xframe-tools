@@ -27,8 +27,6 @@ export type Card = {
   playerWidth: number | undefined
   /** `twitter:site` handle. */
   site: string | undefined
-  /** Raw `twitter:*` and `og:*` tags in document order, first occurrence of each. */
-  tags: Record<string, string>
   /** Card title. */
   title: string | undefined
   /** Page the card was read from. */
@@ -41,8 +39,6 @@ export type Check = {
   level: 'fail' | 'pass' | 'warn'
   /** What was checked. */
   message: string
-  /** Card tags the check covers. */
-  tags: readonly string[]
 }
 
 /** Reads card tags from a page's markup, resolving relative URLs against the page. */
@@ -84,12 +80,6 @@ export function parse(options: parse.Options): Card {
     playerHeight: number(read('twitter:player:height')),
     playerWidth: number(read('twitter:player:width')),
     site: read('twitter:site'),
-    tags: Object.fromEntries(
-      [...tags].filter(
-        (entry) =>
-          entry[0].startsWith('twitter:') || entry[0].startsWith('og:'),
-      ),
-    ),
     title: read('twitter:title', 'og:title') ?? title(options.markup),
     url: options.url,
   }
@@ -115,7 +105,6 @@ export function direct(url: string): Card {
     playerHeight: fallbackSize.height,
     playerWidth: fallbackSize.width,
     site: undefined,
-    tags: {},
     title: undefined,
     url,
   }
@@ -135,38 +124,33 @@ export function check(
   const checks: Check[] = []
   const player = card.player ? URL.parse(card.player) : null
   const local = player !== null && isLoopback(player)
-  const size = ['twitter:player:height', 'twitter:player:width']
 
   checks.push(
     card.card === 'player'
       ? {
           level: 'pass',
           message: 'twitter:card is "player"',
-          tags: ['twitter:card'],
         }
       : {
           level: 'fail',
           message: card.card
             ? `twitter:card is "${card.card}", so X renders a link card`
             : 'twitter:card is missing, so X renders a link card',
-          tags: ['twitter:card'],
         },
   )
 
   checks.push(
     (() => {
-      const tags = ['twitter:player']
       if (!player)
-        return { level: 'fail', message: 'twitter:player is missing', tags }
+        return { level: 'fail', message: 'twitter:player is missing' }
       if (player.protocol === 'https:')
-        return { level: 'pass', message: 'twitter:player uses HTTPS', tags }
+        return { level: 'pass', message: 'twitter:player uses HTTPS' }
       if (local)
         return {
           level: 'warn',
           message: 'twitter:player is a local HTTP URL, which X will not frame',
-          tags,
         }
-      return { level: 'fail', message: 'twitter:player must use HTTPS', tags }
+      return { level: 'fail', message: 'twitter:player must use HTTPS' }
     })(),
   )
 
@@ -175,13 +159,11 @@ export function check(
       ? {
           level: 'pass',
           message: `Player is ${card.playerWidth}×${card.playerHeight}`,
-          tags: size,
         }
       : {
           level: 'fail',
           message:
             'twitter:player:width and twitter:player:height are required',
-          tags: size,
         },
   )
 
@@ -193,7 +175,6 @@ export function check(
     checks.push({
       level: 'warn',
       message: 'X shows players at most 1:1, so this player renders square',
-      tags: size,
     })
 
   checks.push(
@@ -201,31 +182,26 @@ export function check(
       ? {
           level: 'pass',
           message: 'Card has a title',
-          tags: ['twitter:title', 'og:title'],
         }
       : {
           level: 'fail',
           message: 'twitter:title or og:title is required',
-          tags: ['twitter:title', 'og:title'],
         },
   )
 
   checks.push(
     (() => {
-      const tags = ['twitter:image', 'og:image']
       if (!card.image)
         return {
           level: 'warn',
           message: 'twitter:image is missing, so X shows no poster',
-          tags,
         }
       if (options.imageBytes !== undefined && options.imageBytes > imageLimit)
         return {
           level: 'warn',
           message: `Poster image is over ${imageLimit / 1024 / 1024}MB, so X may not show it`,
-          tags,
         }
-      return { level: 'pass', message: 'Card has a poster image', tags }
+      return { level: 'pass', message: 'Card has a poster image' }
     })(),
   )
 
@@ -237,13 +213,11 @@ export function check(
         ? {
             level: 'pass',
             message: 'Player headers allow framing by x.com',
-            tags: [],
           }
         : {
             level: 'fail',
             message:
               'Player headers block framing by x.com (X-Frame-Options or frame-ancestors)',
-            tags: [],
           },
     )
 
@@ -256,7 +230,6 @@ export function check(
         level: 'warn',
         message:
           'Player headers allow x.com but block this devtools origin, so the preview stays blank here',
-        tags: [],
       })
   }
 

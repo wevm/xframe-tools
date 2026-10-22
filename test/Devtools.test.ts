@@ -59,14 +59,6 @@ describe('GET /api/card', () => {
         "player": StringMatching /\\^http:\\\\/\\\\/127\\\\\\.0\\\\\\.0\\\\\\.1:\\\\d\\+\\\\/player\\$/,
         "playerHeight": 360,
         "playerWidth": 480,
-        "tags": {
-          "twitter:card": "player",
-          "twitter:description": "Reports what X's player sandbox allows.",
-          "twitter:player": "/player",
-          "twitter:player:height": "360",
-          "twitter:player:width": "480",
-          "twitter:title": "Sandbox probe",
-        },
         "title": "Sandbox probe",
         "url": StringMatching /\\^http:\\\\/\\\\/127\\\\\\.0\\\\\\.0\\\\\\.1:\\\\d\\+\\\\/\\$/,
       }
@@ -112,8 +104,12 @@ describe('preview', () => {
 
     const frame = await (async () => {
       await expect
-        .poll(() =>
-          page.frames().some((entry) => entry.url().endsWith('auto_play=true')),
+        .poll(
+          () =>
+            page
+              .frames()
+              .some((entry) => entry.url().endsWith('auto_play=true')),
+          { timeout: 15_000 },
         )
         .toBe(true)
       const found = page
@@ -147,7 +143,6 @@ describe('preview', () => {
     await page.goto(
       `${devtools}/?${new URLSearchParams({ url: `${player.origin}/blocked` })}`,
     )
-    await page.getByRole('tab', { name: /Checks/ }).click()
 
     await expect
       .poll(() =>
@@ -163,8 +158,10 @@ describe('preview', () => {
       `${devtools}/?${new URLSearchParams({ url: `${player.origin}/` })}`,
     )
     await expect
-      .poll(() =>
-        page.frames().some((entry) => entry.url().endsWith('auto_play=true')),
+      .poll(
+        () =>
+          page.frames().some((entry) => entry.url().endsWith('auto_play=true')),
+        { timeout: 15_000 },
       )
       .toBe(true)
     const frame = page

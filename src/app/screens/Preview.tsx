@@ -1,4 +1,4 @@
-/** Renders a player card in X's timeline layout beside its metrics, tags, checks, and frame policy. @module */
+/** Renders a player card in X's timeline layout beside its metrics, checks, frame policy, and network details. @module */
 import { type FormEvent, type ReactNode, useState } from 'react'
 import { style, variants } from 'zyzz/default'
 import { base } from '../../internal/Base.ts'
@@ -34,7 +34,7 @@ export function Preview(props: Preview.Props) {
               <p {...styles.muted()}>
                 {state.status === 'error'
                   ? state.message
-                  : 'Card metrics, tags, checks, and the frame policy appear here.'}
+                  : 'Metrics, checks, the frame policy, and network details appear here.'}
               </p>
             </section>
           )}
@@ -233,7 +233,7 @@ declare namespace Player {
 
 function Inspector(props: Inspector.Props) {
   const report = props.state.report
-  const [tab, setTab] = useState<Inspector.Tab>('tags')
+  const [tab, setTab] = useState<Inspector.Tab>('request')
   const player = report.player ?? report.page
   const checks = [
     ...Card.check(report.card, {
@@ -247,14 +247,12 @@ function Inspector(props: Inspector.Props) {
     checks.unshift({
       level: 'warn',
       message: `Card tags could not be read, so the URL is framed directly at ${Card.fallbackSize.width}×${Card.fallbackSize.height}`,
-      tags: [],
     })
   if (props.state.from === 'browser')
     checks.unshift({
       level: 'warn',
       message:
         'The server could not reach this URL, so the browser read its card',
-      tags: [],
     })
 
   const site = (() => {
@@ -271,7 +269,6 @@ function Inspector(props: Inspector.Props) {
       level: 'fail',
       message:
         'The player shares a site with this page, so storage is not partitioned and the sandbox can reach its parent',
-      tags: [],
     })
 
   const failures = checks.filter((entry) => entry.level === 'fail').length
@@ -295,8 +292,21 @@ function Inspector(props: Inspector.Props) {
         </a>
       )}
 
+      <section {...styles.panel()}>
+        <h2 {...styles.panelTitle()}>
+          Checks
+          {failures > 0 && <span {...styles.badge()}>{failures} failing</span>}
+        </h2>
+        <Checks checks={checks} />
+      </section>
+
+      <section {...styles.panel()}>
+        <h2 {...styles.panelTitle()}>Frame policy</h2>
+        <FramePolicy />
+      </section>
+
       <section {...styles.panel({ style: { padding: 0 } })}>
-        <div aria-label="Inspector" role="tablist" {...styles.tabs()}>
+        <div aria-label="Network" role="tablist" {...styles.tabs()}>
           {Inspector.tabs.map((entry) => (
             <button
               aria-selected={tab === entry}
@@ -307,21 +317,15 @@ function Inspector(props: Inspector.Props) {
               {...styles.tab({ selected: tab === entry })}
             >
               {Inspector.labels[entry]}
-              {entry === 'checks' && failures > 0 && (
-                <span {...styles.badge()}>{failures}</span>
-              )}
             </button>
           ))}
         </div>
-        <div role="tabpanel" {...styles.tabPanel({ padded: tab !== 'tags' })}>
-          {(() => {
-            if (tab === 'tags') return <Tags checks={checks} report={report} />
-            if (tab === 'checks') return <Checks checks={checks} />
-            if (tab === 'policy') return <PolicyTab />
-            if (tab === 'request')
-              return <Request from={props.state.from} report={report} />
-            return <Headers fetched={player} />
-          })()}
+        <div role="tabpanel" {...styles.tabPanel()}>
+          {tab === 'request' ? (
+            <Request from={props.state.from} report={report} />
+          ) : (
+            <Headers fetched={player} />
+          )}
         </div>
       </section>
     </>
@@ -338,20 +342,11 @@ declare namespace Inspector {
 }
 
 namespace Inspector {
-  export const tabs = [
-    'tags',
-    'checks',
-    'policy',
-    'request',
-    'headers',
-  ] as const
+  export const tabs = ['request', 'headers'] as const
 
   export const labels = {
-    checks: 'Checks',
     headers: 'Headers',
-    policy: 'Frame policy',
     request: 'Request',
-    tags: 'Card tags',
   } as const satisfies Record<Tab, string>
 }
 
@@ -366,46 +361,6 @@ function Metric(props: Metric.Props) {
 
 declare namespace Metric {
   type Props = { label: string; value: string }
-}
-
-function Tags(props: Tags.Props) {
-  // X reads twitter:* tags first and falls back to og:* tags.
-  const entries = Object.entries(props.report.card.tags).sort(
-    (a, b) =>
-      Number(b[0].startsWith('twitter:')) - Number(a[0].startsWith('twitter:')),
-  )
-
-  return (
-    <div>
-      {entries.length === 0 ? (
-        <p {...styles.row()}>
-          <span {...styles.muted()}>No twitter:* or og:* tags found</span>
-        </p>
-      ) : (
-        entries.map((entry) => {
-          const level = worst(
-            props.checks.filter((check) => check.tags.includes(entry[0])),
-          )
-          return (
-            <div key={entry[0]} {...styles.row()}>
-              <code {...styles.tagName()}>{entry[0]}</code>
-              <code title={entry[1]} {...styles.tagValue()}>
-                {entry[1]}
-              </code>
-              {level ? <Level level={level} /> : <span />}
-            </div>
-          )
-        })
-      )}
-    </div>
-  )
-}
-
-declare namespace Tags {
-  type Props = {
-    checks: readonly Card.Check[]
-    report: Preview.Report
-  }
 }
 
 function Checks(props: Checks.Props) {
@@ -425,7 +380,7 @@ declare namespace Checks {
   type Props = { checks: readonly Card.Check[] }
 }
 
-function PolicyTab() {
+function FramePolicy() {
   const sandbox = Policy.tokens(policy.sandbox)
 
   return (
@@ -588,13 +543,6 @@ function display(url: string) {
 function size(bytes: number | undefined) {
   if (bytes === undefined) return '–'
   return `${(bytes / 1024).toFixed(2)}kb`
-}
-
-function worst(checks: readonly Card.Check[]) {
-  if (checks.some((check) => check.level === 'fail')) return 'fail'
-  if (checks.some((check) => check.level === 'warn')) return 'warn'
-  if (checks.length > 0) return 'pass'
-  return undefined
 }
 
 namespace styles {
@@ -810,6 +758,14 @@ namespace styles {
     padding: 4,
   })
 
+  export const panelTitle = style({
+    alignItems: 'center',
+    display: 'flex',
+    gap: 2,
+    paddingBottom: 3,
+    typography: 'heading.16',
+  })
+
   export const metrics = style({
     border: '1px solid',
     borderColor: 'gray.400',
@@ -849,40 +805,6 @@ namespace styles {
     textDecoration: 'none',
     typography: 'copy.14',
     ':hover': { textDecoration: 'underline' },
-  })
-
-  export const row = style({
-    alignItems: 'center',
-    borderBottom: '1px solid',
-    borderBottomColor: 'gray.400',
-    columnGap: 4,
-    display: 'grid',
-    gridTemplateColumns: 'minmax(0, 2fr) minmax(0, 3fr) auto !custom',
-    paddingBottom: 2,
-    paddingLeft: 4,
-    paddingRight: 4,
-    paddingTop: 2,
-    ':last-child': { borderBottom: 'none' },
-    '@media (min-width: 40rem)': {
-      gridTemplateColumns: 'minmax(0, 13rem) minmax(0, 1fr) auto !custom',
-    },
-  })
-
-  export const tagName = style({
-    color: 'gray.900',
-    fontFamily: 'mono',
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-    typography: 'copy.13',
-    whiteSpace: 'nowrap',
-  })
-
-  export const tagValue = style({
-    fontFamily: 'mono',
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-    typography: 'copy.13',
-    whiteSpace: 'nowrap',
   })
 
   export const tabs = style({
@@ -931,11 +853,7 @@ namespace styles {
     typography: 'label.12',
   })
 
-  export const tabPanel = variants({
-    variants: {
-      padded: { false: {}, true: { padding: 4 } },
-    },
-  })
+  export const tabPanel = style({ padding: 4 })
 
   export const list = style({
     display: 'flex',
@@ -997,19 +915,31 @@ namespace styles {
     borderBottomColor: 'gray.400',
     columnGap: 4,
     display: 'grid',
-    gridTemplateColumns: 'minmax(0, 10rem) minmax(0, 1fr) !custom',
+    gridTemplateColumns: 'minmax(0, 1fr) !custom',
     paddingBottom: 2,
     paddingTop: 2,
+    rowGap: 1,
     typography: 'copy.14',
     ':last-child': { borderBottom: 'none' },
+    '@media (min-width: 40rem)': {
+      gridTemplateColumns: 'minmax(0, 10rem) minmax(0, 1fr) !custom',
+    },
   })
 
   export const factValue = variants({
-    base: { margin: 0, overflowWrap: 'anywhere', textAlign: 'right' },
+    base: {
+      margin: 0,
+      overflowWrap: 'anywhere',
+      '@media (min-width: 40rem)': { textAlign: 'right' },
+    },
     variants: {
       mono: {
         false: {},
-        true: { fontFamily: 'mono', textAlign: 'left', typography: 'copy.13' },
+        true: {
+          fontFamily: 'mono',
+          typography: 'copy.13',
+          '@media (min-width: 40rem)': { textAlign: 'left' },
+        },
       },
     },
   })
