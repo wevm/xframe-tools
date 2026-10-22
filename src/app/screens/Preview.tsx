@@ -1,7 +1,6 @@
 /** Renders a player card in X's timeline layout beside its metrics, checks, and network details. @module */
 import { type FormEvent, type ReactNode, useState } from 'react'
 import { style, variants } from 'zyzz/default'
-import { base } from '../../internal/Base.ts'
 import * as Card from '../../internal/Card.ts'
 import type * as Crawl from '../../internal/Crawl.ts'
 import * as Policy from '../../internal/Policy.ts'
@@ -200,7 +199,7 @@ declare namespace Post {
 
 function Player(props: Player.Props) {
   const card = props.report.card
-  const src = `${base}/i/cards-frame?${new URLSearchParams({ player: card.player ?? card.url })}`
+  const src = `${import.meta.env.BASE_URL}i/cards-frame?${new URLSearchParams({ player: card.player ?? card.url })}`
 
   return (
     <>

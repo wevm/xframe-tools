@@ -3,5 +3,8 @@
  * @module
  */
 
-/** Mount path of the devtools, without a trailing slash. */
-export const base = '/__xframe'
+/**
+ * Mount path of the devtools, without a trailing slash. `XFRAME_BASE` overrides it at build time, such as `/` for the
+ * root deploy on xframe.tools. Read it only from build configuration, since the browser has no `process.env`.
+ */
+export const base = (process.env.XFRAME_BASE ?? '/__xframe').replace(/\/$/, '')

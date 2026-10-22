@@ -68,7 +68,9 @@ pnpm check:types      # type-check
 pnpm check:policy     # compare the captured policy with X's live cards-frame
 pnpm update:policy    # capture X's live cards-frame policy again
 pnpm build            # build the Worker with Void
-pnpm deploy           # deploy with void deploy
+pnpm run deploy       # deploy to https://xframe.tools with void deploy
 ```
+
+`pnpm run deploy` builds with `XFRAME_BASE=/`, so xframe.tools serves the devtools at its root. Other builds serve them under `/__xframe`. CI deploys each push to `main` after its checks pass, using the `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` repository secrets.
 
 `node test/fixtures/Player.ts` serves a probe player at `http://127.0.0.1:5173`. It reports which capabilities the sandbox allows, and it opens a popup with a form.

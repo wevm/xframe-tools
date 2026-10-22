@@ -1,7 +1,6 @@
 /** Serves the post preview, which frames a player the way X's timeline does. @module */
 import { createFileRoute } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
-import { base } from '../../internal/Base.ts'
 import * as Card from '../../internal/Card.ts'
 import * as Crawl from '../../internal/Crawl.ts'
 import { Preview } from '../screens/Preview.tsx'
@@ -67,7 +66,7 @@ async function load(input: string): Promise<Preview.State> {
   const server = await (async (): Promise<Crawl.Result> => {
     try {
       const response = await fetch(
-        `${base}/api/card?${new URLSearchParams({ url: url.href })}`,
+        `${import.meta.env.BASE_URL}api/card?${new URLSearchParams({ url: url.href })}`,
       )
       return (await response.json()) as Crawl.Result
     } catch (error) {

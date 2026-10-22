@@ -13,7 +13,7 @@ Source blob: `c011a86d47f2991c8803c6533b4d3a8569282261` at commit `be0ca7d`. Ret
 - A relaxation needed for local development, such as framing a loopback player, is reported in `Policy.render`'s `deviations`, in the `x-xframe-deviations` header, and in the page's checks. Never relax a policy silently.
 - Card checks mirror X's rendering rules. Each `fail` names a condition under which X renders no player. Each `warn` names a condition under which X renders a player that differs from the preview.
 - The player must be cross-site from the devtools page, as it is from `x.com`. Same-site framing hides storage partitioning and gives the sandboxed player access to its parent, so the page reports it as a failed check.
-- Every page, asset, and endpoint is served under `base` (`/__xframe`), so a host app can mount the build on one path.
+- Every page, asset, and endpoint is served under `base` (`/__xframe`), so a host app can mount the build on one path. The xframe.tools deploy sets `XFRAME_BASE=/` to serve them at the root. App code reads the mount path from `import.meta.env.BASE_URL`.
 
 ## TypeScript Conventions
 
@@ -140,7 +140,7 @@ Applies to documentation, comments, TSDoc, commit messages, and pull requests.
 ## Commands
 
 - `pnpm dev` serves the devtools at `http://localhost:3000/__xframe/`.
-- `pnpm build` builds the Worker with Void. `pnpm deploy` deploys it with `void deploy`.
+- `pnpm build` builds the Worker with Void. `pnpm run deploy` deploys it to xframe.tools at the root with `void deploy`.
 - `pnpm check` runs `vp check --fix` for formatting and syntax-only lint. `pnpm check:types` runs `tsc`.
 - `pnpm test` runs the integration suite. `PLAYWRIGHT_EXECUTABLE_PATH` names a Chromium binary in place of Playwright's own.
 - `pnpm check:policy` fails when X's live cards-frame differs from `src/internal/policy.json`. `pnpm update:policy` rewrites it.
