@@ -114,6 +114,8 @@ Applies to documentation, comments, TSDoc, commit messages, and pull requests.
 
 - `src/internal/` holds pure modules: `Card` reads and checks card tags, `Policy` parses and renders X's cards-frame, `Crawl` fetches a page, its player document, and its poster image with their metrics, and `Base` names the mount path.
 - `src/app/` is the TanStack Start app that Void builds: `router.tsx`, `routes/`, `screens/`, and `components/`.
+- `src/vite.ts` and `src/worker.ts` are the package's entries. `src/Devtools.ts` serves the built app (`#app`) and its embedded client assets (`#assets`), and `src/types/` declares both imports.
+- `scripts/app.ts` builds the app into `dist/app`. It runs before zile, since `zile publish:prepare` removes the dependencies that Void reads to detect TanStack Start.
 - `scripts/policy.ts` captures X's live cards-frame policy, or checks the saved capture for drift.
 - `test/` holds the integration suite and its fixtures.
 
@@ -140,7 +142,8 @@ Applies to documentation, comments, TSDoc, commit messages, and pull requests.
 ## Commands
 
 - `pnpm dev` serves the devtools at `http://localhost:3000/__xframe/`.
-- `pnpm build` builds the Worker with Void. `pnpm deploy` deploys it with `void deploy`.
+- `pnpm build` builds the package: `scripts/app.ts` builds the app with Void into `dist/app`, then zile builds the entries into `dist/lib`. `pnpm deploy` deploys the hosted devtools with `void deploy`.
+- `pnpm changeset` records a change for the next release. The Main workflow opens the version pull request, and publishes to npm once it merges.
 - `pnpm check` runs `vp check --fix` for formatting and syntax-only lint. `pnpm check:types` runs `tsc`.
 - `pnpm test` runs the integration suite. `PLAYWRIGHT_EXECUTABLE_PATH` names a Chromium binary in place of Playwright's own.
 - `pnpm check:policy` fails when X's live cards-frame differs from `src/internal/policy.json`. `pnpm update:policy` rewrites it.

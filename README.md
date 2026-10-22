@@ -6,9 +6,6 @@ Build X player cards under the same sandbox, permissions, and headers that X app
 
 ## Getting Started
 
-> [!NOTE]
-> The `xframe-tools` package, its Vite plugin, and its Worker entry are not published yet. Until then, run the devtools from this repository, as Development describes.
-
 ### 1. Install
 
 ```sh
@@ -67,8 +64,11 @@ pnpm check            # format and lint
 pnpm check:types      # type-check
 pnpm check:policy     # compare the captured policy with X's live cards-frame
 pnpm update:policy    # capture X's live cards-frame policy again
-pnpm build            # build the Worker with Void
+pnpm build            # build the package: the app into dist/app, and the entries into dist/lib
+pnpm changeset        # describe a change for the next release
 pnpm deploy           # deploy with void deploy
 ```
+
+Pushes to `main` open a version pull request with Changesets. When it merges, the release workflow publishes `xframe-tools` to npm.
 
 `node test/fixtures/Player.ts` serves a probe player at `http://127.0.0.1:5173`. It reports which capabilities the sandbox allows, and it opens a popup with a form.

@@ -190,6 +190,82 @@ describe('preview', () => {
   })
 })
 
+describe('xframe-tools/vite', () => {
+  let host: string
+  let hostServer: ChildProcess.ChildProcess
+
+  beforeAll(async () => {
+    const port = await free()
+    const { VITEST: _, ...env } = process.env
+    // The host app imports the plugin from the package's build, as an app that installs it does.
+    hostServer = ChildProcess.spawn(
+      'pnpm',
+      ['exec', 'vp', 'dev', 'test/fixtures/host', '--port', String(port)],
+      { env, stdio: 'ignore' },
+    )
+    host = `http://localhost:${port}`
+    await ready(`${host}/__xframe/`)
+  }, 90_000)
+
+  afterAll(() => {
+    hostServer?.kill()
+  })
+
+  test('serves the devtools beside the app', async () => {
+    const page = await fetch(`${host}/__xframe/`)
+    const app = await fetch(`${host}/`)
+
+    expect(page.headers.get('cross-origin-opener-policy')).toBe(
+      'same-origin-allow-popups',
+    )
+    expect(await app.text()).toContain('<p>Host app</p>')
+  })
+
+  test('runs the player under X sandbox', async () => {
+    const page = await browser.newPage()
+    const errors: string[] = []
+    page.on('pageerror', (error) => errors.push(error.message))
+    page.on('requestfailed', (request) => errors.push(request.url()))
+    page.on('response', (response) => {
+      if (response.status() >= 400) errors.push(response.url())
+    })
+    await page.goto(
+      `${host}/__xframe/?${new URLSearchParams({ url: `${player.origin}/` })}`,
+    )
+
+    await expect
+      .poll(
+        () =>
+          page.frames().some((entry) => entry.url().endsWith('auto_play=true')),
+        { timeout: 15_000 },
+      )
+      .toBe(true)
+    const frame = page
+      .frames()
+      .find((entry) => entry.url().endsWith('auto_play=true'))
+    if (!frame) throw new Error('Player frame did not load.')
+    await frame.waitForSelector('li[data-probe="alert"]')
+    const results = await frame.$$eval('li[data-probe]', (items) =>
+      Object.fromEntries(
+        items.map((item) => [item.dataset.probe, item.dataset.result]),
+      ),
+    )
+
+    expect(results).toMatchInlineSnapshot(`
+      {
+        "alert": "blocked",
+        "document.cookie": "allowed",
+        "framed": "allowed",
+        "localStorage": "allowed",
+        "origin": "allowed",
+        "parent.document": "blocked",
+      }
+    `)
+    expect(errors).toMatchInlineSnapshot(`[]`)
+    await page.close()
+  })
+})
+
 function free() {
   return new Promise<number>((resolve, reject) => {
     const probe = Net.createServer()

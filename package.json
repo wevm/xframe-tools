@@ -1,6 +1,9 @@
 {
   "scripts": {
-    "build": "vp build",
+    "build": "pnpm build:app && zile",
+    "build:app": "node scripts/app.ts",
+    "changeset:publish": "pnpm build:app && zile publish:prepare && changeset publish && zile publish:post",
+    "changeset:version": "changeset version",
     "check": "vp check --fix",
     "check:policy": "node scripts/policy.ts --check",
     "check:types": "tsc",
@@ -10,31 +13,74 @@
     "update:policy": "node scripts/policy.ts"
   },
   "devDependencies": {
+    "@changesets/cli": "catalog:",
+    "@fontsource-variable/geist": "catalog:",
+    "@fontsource-variable/geist-mono": "catalog:",
+    "@tanstack/react-router": "catalog:",
+    "@tanstack/react-start": "catalog:",
     "@types/node": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "@vitejs/plugin-react": "catalog:",
     "playwright": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:",
     "vite-plus": "catalog:",
-    "void": "catalog:"
+    "void": "catalog:",
+    "zile": "catalog:",
+    "zyzz": "catalog:"
   },
   "packageManager": "pnpm@10.28.0",
   "[!start-pkg]": "",
   "name": "xframe-tools",
-  "private": true,
+  "version": "0.0.0",
+  "description": "Devtools that preview X player cards under the sandbox, permissions, and headers that X applies.",
   "type": "module",
   "engines": {
     "node": ">=24.21.0"
   },
-  "dependencies": {
-    "@fontsource-variable/geist": "catalog:",
-    "@fontsource-variable/geist-mono": "catalog:",
-    "@tanstack/react-router": "catalog:",
-    "@tanstack/react-start": "catalog:",
-    "react": "catalog:",
-    "react-dom": "catalog:",
-    "zyzz": "catalog:"
-  }
+  "exports": {
+    "./vite": {
+      "src": "./src/vite.ts",
+      "types": "./dist/lib/vite.d.ts",
+      "default": "./dist/lib/vite.js"
+    },
+    "./worker": {
+      "src": "./src/worker.ts",
+      "types": "./dist/lib/worker.d.ts",
+      "default": "./dist/lib/worker.js"
+    }
+  },
+  "imports": {
+    "#app": {
+      "types": "./src/types/app.d.ts",
+      "default": "./dist/app/server/index.js"
+    },
+    "#assets": {
+      "types": "./src/types/assets.d.ts",
+      "default": "./dist/app/assets.js"
+    }
+  },
+  "files": [
+    "dist",
+    "src",
+    "!**/*.test.ts",
+    "!src/app"
+  ],
+  "license": "MIT",
+  "peerDependencies": {
+    "vite": ">=7"
+  },
+  "peerDependenciesMeta": {
+    "vite": {
+      "optional": true
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/wevm/xframe-tools.git"
+  },
+  "sideEffects": false
 }
