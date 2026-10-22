@@ -1,7 +1,7 @@
 # Adapted from wevm/zyzz
 
 Source: https://github.com/wevm/zyzz/blob/main/AGENTS.md
-Source blob: `c011a86d47f2991c8803c6533b4d3a8569282261` at commit `be0ca7d`. Retrieved 2026-10-22. General coding conventions are retained. Project principles, UI, testing, layout, tooling, and commands are adapted for X Frames Devtools. Rust, benchmark, and documentation-site sections are removed.
+Source blob: `c011a86d47f2991c8803c6533b4d3a8569282261` at commit `be0ca7d`. Retrieved 2026-10-22. General coding conventions are retained. Project principles, UI, testing, layout, tooling, and commands are adapted for xframe Tools. Rust, benchmark, and documentation-site sections are removed.
 
 # Agent Guidelines
 
@@ -10,10 +10,10 @@ Source blob: `c011a86d47f2991c8803c6533b4d3a8569282261` at commit `be0ca7d`. Ret
 - The devtools reproduce the environment X gives a player card: the timeline iframe, the cards-frame document, its sandbox, its permissions policy, and its response headers. Fidelity to X is the product. A difference from X is a defect unless the devtools report it.
 - `src/internal/policy.json` is the authoritative capture of X's cards-frame. `pnpm update:policy` writes it from `https://x.com/i/cards-frame/<postId>`, and nothing else edits it. The cards-frame route serves the captured markup and headers verbatim, with only the nonce and player URL substituted.
 - Values that come from X's web client bundle and not from the cards-frame response, such as the timeline iframe's `allow` attribute, live in `Policy.timeline` with a comment naming their source.
-- A relaxation needed for local development, such as framing a loopback player, is reported in `Policy.render`'s `deviations`, in the `x-xframes-deviations` header, and in the page's checks. Never relax a policy silently.
+- A relaxation needed for local development, such as framing a loopback player, is reported in `Policy.render`'s `deviations`, in the `x-xframe-deviations` header, and in the page's checks. Never relax a policy silently.
 - Card checks mirror X's rendering rules. Each `fail` names a condition under which X renders no player. Each `warn` names a condition under which X renders a player that differs from the preview.
 - The player must be cross-site from the devtools page, as it is from `x.com`. Same-site framing hides storage partitioning and gives the sandboxed player access to its parent, so the page reports it as a failed check.
-- Every page, asset, and endpoint is served under `base` (`/__xframes`), so a host app can mount the build on one path.
+- Every page, asset, and endpoint is served under `base` (`/__xframe`), so a host app can mount the build on one path.
 
 ## TypeScript Conventions
 
@@ -139,7 +139,7 @@ Applies to documentation, comments, TSDoc, commit messages, and pull requests.
 
 ## Commands
 
-- `pnpm dev` serves the devtools at `http://localhost:3000/__xframes/`.
+- `pnpm dev` serves the devtools at `http://localhost:3000/__xframe/`.
 - `pnpm build` builds the Worker with Void. `pnpm deploy` deploys it with `void deploy`.
 - `pnpm check` runs `vp check --fix` for formatting and syntax-only lint. `pnpm check:types` runs `tsc`.
 - `pnpm test` runs the integration suite. `PLAYWRIGHT_EXECUTABLE_PATH` names a Chromium binary in place of Playwright's own.

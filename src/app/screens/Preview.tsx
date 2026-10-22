@@ -25,9 +25,9 @@ export function Preview(props: Preview.Props) {
         <Avatar />
         <div {...styles.body()}>
           <div {...styles.byline()}>
-            <span {...styles.name()}>X Frames</span>
+            <span {...styles.name()}>xframe Tools</span>
             <Icons.Verified />
-            <span {...styles.muted()}>@xframes · 1h</span>
+            <span {...styles.muted()}>@xframe · 1h</span>
           </div>
 
           {(() => {

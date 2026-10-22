@@ -4,4 +4,4 @@
  */
 
 /** Mount path of the devtools, without a trailing slash. */
-export const base = '/__xframes'
+export const base = '/__xframe'

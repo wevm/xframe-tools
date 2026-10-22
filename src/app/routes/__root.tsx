@@ -17,7 +17,7 @@ export const Route = createRootRoute({
       { charSet: 'utf-8' },
       { content: 'width=device-width, initial-scale=1', name: 'viewport' },
       { content: 'dark', name: 'color-scheme' },
-      { title: 'X Frames Devtools' },
+      { title: 'xframe Tools' },
     ],
   }),
 })

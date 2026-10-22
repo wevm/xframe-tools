@@ -1,4 +1,4 @@
-# X Frames Devtools
+# xframe Tools
 
 Build X player cards under the same sandbox, permissions, and headers that X applies.
 
@@ -10,7 +10,7 @@ The devtools serve the same two layers. The cards-frame markup and headers are c
 
 ```mermaid
 flowchart LR
-  Page["Preview page<br/>(stands in for x.com)"] -->|"iframe allow=autoplay; fullscreen; web-share"| Frame["/__xframes/i/cards-frame<br/>X's markup, CSP, COOP"]
+  Page["Preview page<br/>(stands in for x.com)"] -->|"iframe allow=autoplay; fullscreen; web-share"| Frame["/__xframe/i/cards-frame<br/>X's markup, CSP, COOP"]
   Frame -->|"sandbox=allow-popups allow-same-origin<br/>allow-scripts allow-presentation"| Player["Player<br/>?autoplay=1&auto_play=true"]
   Player -->|"window.open"| Popup["Popup<br/>inherits the sandbox"]
 ```
@@ -32,14 +32,14 @@ flowchart LR
 Open the devtools, then paste a page URL or a player URL. The URL also loads from the query string:
 
 ```
-http://localhost:3000/__xframes/?url=https://nanocode.xyz/cloudflare
+http://localhost:3000/__xframe/?url=https://nanocode.xyz/cloudflare
 ```
 
 The server reads the page's card tags with X's crawler user agent, `Twitterbot/1.0`. Card checks report what X would render, and the frame policy lists the sandbox tokens that X grants and blocks.
 
 ### Local Players
 
-A loopback URL, such as `http://localhost:5173`, loads too. X frames only HTTPS players, so a local player needs two relaxations of X's CSP: loopback `frame-src` sources, and no `upgrade-insecure-requests`. The checks and the `x-xframes-deviations` header report both.
+A loopback URL, such as `http://localhost:5173`, loads too. X frames only HTTPS players, so a local player needs two relaxations of X's CSP: loopback `frame-src` sources, and no `upgrade-insecure-requests`. The checks and the `x-xframe-deviations` header report both.
 
 Serve the devtools and the player on different loopback hosts, such as `localhost` and `127.0.0.1`. Same-site framing hides storage partitioning, so the page reports it and links to the other host.
 
@@ -47,7 +47,7 @@ Serve the devtools and the player on different loopback hosts, such as `localhos
 
 ```sh
 pnpm i                # install dependencies (Node 24.21 or later)
-pnpm dev              # serve the devtools at http://localhost:3000/__xframes/
+pnpm dev              # serve the devtools at http://localhost:3000/__xframe/
 pnpm test             # run the integration suite in Chromium
 pnpm check            # format and lint
 pnpm check:types      # type-check

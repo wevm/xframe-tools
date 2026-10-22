@@ -24,7 +24,7 @@ beforeAll(async () => {
     { env, stdio: 'ignore' },
   )
   // The probe listens on 127.0.0.1, so the devtools on localhost are a separate site, as x.com is.
-  devtools = `http://localhost:${port}/__xframes`
+  devtools = `http://localhost:${port}/__xframe`
   await ready(`${devtools}/`)
   browser = await chromium.launch(
     process.env.PLAYWRIGHT_EXECUTABLE_PATH
@@ -84,7 +84,7 @@ describe('GET /i/cards-frame', () => {
     expect(/data-src="([^"]+)"/.exec(markup)?.[1]).toBe(
       `${player.origin}/player?autoplay=1&amp;auto_play=true`,
     )
-    expect(response.headers.get('x-xframes-deviations')).toMatchInlineSnapshot(
+    expect(response.headers.get('x-xframe-deviations')).toMatchInlineSnapshot(
       `"frame-src allows loopback origins, upgrade-insecure-requests is removed"`,
     )
   })

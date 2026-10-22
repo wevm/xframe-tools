@@ -24,7 +24,7 @@ export const Route = createFileRoute('/i/cards-frame')({
         result.headers.set('content-type', 'text/html; charset=utf-8')
         if (result.deviations.length > 0)
           result.headers.set(
-            'x-xframes-deviations',
+            'x-xframe-deviations',
             result.deviations.join(', '),
           )
 

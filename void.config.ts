@@ -7,10 +7,10 @@ import { defineConfig } from 'void/config'
 export default defineConfig({
   routing: {
     headers: {
-      '/__xframes': ['Cross-Origin-Opener-Policy: same-origin-allow-popups'],
-      '/__xframes/': ['Cross-Origin-Opener-Policy: same-origin-allow-popups'],
+      '/__xframe': ['Cross-Origin-Opener-Policy: same-origin-allow-popups'],
+      '/__xframe/': ['Cross-Origin-Opener-Policy: same-origin-allow-popups'],
     },
-    redirects: { '/': '/__xframes/' },
+    redirects: { '/': '/__xframe/' },
   },
   worker: { compatibility_date: '2026-10-01' },
 })

@@ -7,7 +7,7 @@ import * as Path from 'node:path'
 import * as Policy from '../src/internal/Policy.ts'
 
 // Any post with a third-party player card serves the same cards-frame policy.
-const postId = process.env.XFRAMES_POST_ID ?? '2113035952356794655'
+const postId = process.env.XFRAME_POST_ID ?? '2113035952356794655'
 const source = `https://x.com/i/cards-frame/${postId}`
 const target = Path.resolve(import.meta.dirname, '../src/internal/policy.json')
 const check = process.argv.includes('--check')
