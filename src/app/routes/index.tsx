@@ -7,6 +7,10 @@ import { Preview } from '../screens/Preview.tsx'
 
 export const Route = createFileRoute('/')({
   component: Page,
+  // X's timeline page opens popups with the opener kept.
+  headers: () => ({
+    'Cross-Origin-Opener-Policy': 'same-origin-allow-popups',
+  }),
   validateSearch: (search: Record<string, unknown>): Search =>
     typeof search.url === 'string' && search.url ? { url: search.url } : {},
 })
