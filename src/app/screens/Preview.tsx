@@ -120,10 +120,6 @@ function Composer(props: Composer.Props) {
             >
               <Icons.Reload />
             </button>
-            <span {...styles.hint()}>
-              <Icons.Link />
-              Localhost works
-            </span>
           </span>
           <button
             {...styles.button()}
@@ -560,13 +556,6 @@ namespace styles {
     width: 9,
     ':focus-visible': { outline: '2px solid', outlineColor: 'blue.600' },
     ':hover': { backgroundColor: 'rgb(29 155 240 / 0.1) !custom' },
-  })
-
-  export const hint = style({
-    alignItems: 'center',
-    display: 'inline-flex',
-    gap: 2,
-    typography: 'copy.13',
   })
 
   export const button = style({
