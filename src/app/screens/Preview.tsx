@@ -1,10 +1,9 @@
-/** Renders a player card in X's timeline layout beside its metrics, checks, frame policy, and network details. @module */
+/** Renders a player card in X's timeline layout beside its metrics, checks, and network details. @module */
 import { type FormEvent, type ReactNode, useState } from 'react'
 import { style, variants } from 'zyzz/default'
 import { base } from '../../internal/Base.ts'
 import * as Card from '../../internal/Card.ts'
 import type * as Crawl from '../../internal/Crawl.ts'
-import policy from '../../internal/policy.json' with { type: 'json' }
 import * as Policy from '../../internal/Policy.ts'
 import * as Icons from '../components/Icons.tsx'
 
@@ -14,15 +13,14 @@ export function Preview(props: Preview.Props) {
 
   return (
     <main {...styles.shell()}>
-      <UrlBar
-        loading={state.status === 'loading'}
-        onReload={() => setReloads((value) => value + 1)}
-        onSubmit={props.onSubmit}
-        url={props.url}
-      />
-
       <div {...styles.columns()}>
         <section aria-label="Post" {...styles.timeline()}>
+          <Composer
+            loading={state.status === 'loading'}
+            onReload={() => setReloads((value) => value + 1)}
+            onSubmit={props.onSubmit}
+            url={props.url}
+          />
           <Post reloads={reloads} state={state} />
         </section>
 
@@ -34,7 +32,7 @@ export function Preview(props: Preview.Props) {
               <p {...styles.muted()}>
                 {state.status === 'error'
                   ? state.message
-                  : 'Metrics, checks, the frame policy, and network details appear here.'}
+                  : 'Metrics, checks, and network details appear here.'}
               </p>
             </section>
           )}
@@ -85,7 +83,7 @@ export declare namespace Preview {
       }
 }
 
-function UrlBar(props: UrlBar.Props) {
+function Composer(props: Composer.Props) {
   const [value, setValue] = useState(props.url ?? '')
 
   const submit = (event: FormEvent<HTMLFormElement>) => {
@@ -95,41 +93,52 @@ function UrlBar(props: UrlBar.Props) {
   }
 
   return (
-    <form {...styles.bar()} onSubmit={submit}>
-      <button
-        {...styles.iconButton()}
-        aria-label="Reload frame"
-        onClick={props.onReload}
-        type="button"
-      >
-        <Icons.Reload />
-      </button>
-      <label {...styles.address()}>
-        <span {...styles.visuallyHidden()}>Page or player URL</span>
-        <Icons.Link />
-        <input
-          {...styles.input()}
-          autoComplete="off"
-          name="url"
-          onChange={(event) => setValue(event.target.value)}
-          placeholder="Paste a page or player URL. Localhost works."
-          spellCheck={false}
-          type="url"
-          value={value}
-        />
-      </label>
-      <button
-        {...styles.button()}
-        disabled={!value.trim() || props.loading}
-        type="submit"
-      >
-        {props.loading ? 'Loading' : 'Load'}
-      </button>
+    <form {...styles.composer()} onSubmit={submit}>
+      <span aria-hidden="true" {...styles.avatar()} />
+      <div {...styles.body()}>
+        <label>
+          <span {...styles.visuallyHidden()}>Page or player URL</span>
+          <input
+            {...styles.input()}
+            autoComplete="off"
+            name="url"
+            onChange={(event) => setValue(event.target.value)}
+            placeholder="Paste a player URL"
+            spellCheck={false}
+            type="url"
+            value={value}
+          />
+        </label>
+        <div {...styles.toolbar()}>
+          <span {...styles.tools()}>
+            <button
+              {...styles.tool()}
+              aria-label="Reload frame"
+              onClick={props.onReload}
+              title="Reload frame"
+              type="button"
+            >
+              <Icons.Reload />
+            </button>
+            <span {...styles.hint()}>
+              <Icons.Link />
+              Localhost works
+            </span>
+          </span>
+          <button
+            {...styles.button()}
+            disabled={!value.trim() || props.loading}
+            type="submit"
+          >
+            {props.loading ? 'Loading' : 'Load'}
+          </button>
+        </div>
+      </div>
     </form>
   )
 }
 
-declare namespace UrlBar {
+declare namespace Composer {
   type Props = {
     loading: boolean
     onReload: () => void
@@ -300,11 +309,6 @@ function Inspector(props: Inspector.Props) {
         <Checks checks={checks} />
       </section>
 
-      <section {...styles.panel()}>
-        <h2 {...styles.panelTitle()}>Frame policy</h2>
-        <FramePolicy />
-      </section>
-
       <section {...styles.panel({ style: { padding: 0 } })}>
         <div aria-label="Network" role="tablist" {...styles.tabs()}>
           {Inspector.tabs.map((entry) => (
@@ -322,7 +326,7 @@ function Inspector(props: Inspector.Props) {
         </div>
         <div role="tabpanel" {...styles.tabPanel()}>
           {tab === 'request' ? (
-            <Request from={props.state.from} report={report} />
+            <Request report={report} />
           ) : (
             <Headers fetched={player} />
           )}
@@ -353,8 +357,8 @@ namespace Inspector {
 function Metric(props: Metric.Props) {
   return (
     <div {...styles.metric()}>
-      <span {...styles.metricValue()}>{props.value}</span>
       <span {...styles.metricLabel()}>{props.label}</span>
+      <span {...styles.metricValue()}>{props.value}</span>
     </div>
   )
 }
@@ -380,85 +384,34 @@ declare namespace Checks {
   type Props = { checks: readonly Card.Check[] }
 }
 
-function FramePolicy() {
-  const sandbox = Policy.tokens(policy.sandbox)
-
-  return (
-    <div {...styles.list()}>
-      <p {...styles.muted()}>
-        The player and every popup it opens inherit this sandbox.
-      </p>
-      <div {...styles.tokens()}>
-        {sandbox.granted.map((token) => (
-          <code key={token} {...styles.token({ granted: true })}>
-            {token}
-          </code>
-        ))}
-        {sandbox.blocked.map((token) => (
-          <code key={token} {...styles.token({ granted: false })}>
-            {token}
-          </code>
-        ))}
-      </div>
-      <Facts
-        entries={[
-          ['allow', policy.allow],
-          ['Player query', policy.playerQuery],
-          ['COOP', policy.headers['cross-origin-opener-policy'] ?? '–'],
-          [
-            'Captured',
-            `${policy.capturedAt.slice(0, 10)} from ${new URL(policy.source).pathname}`,
-          ],
-        ]}
-      />
-    </div>
-  )
-}
-
 function Request(props: Request.Props) {
-  const report = props.report
-  const page = report.page
+  const page = props.report.page
 
   return (
     <Facts
       entries={[
         ['Method', 'GET'],
-        ['URL', report.card.url],
-        ['Status', page ? String(page.status) : '–'],
-        ['Redirected', page ? (page.redirected ? 'Yes' : 'No') : '–'],
+        ['URL', props.report.card.url],
         [
-          'Read by',
-          {
-            browser: 'Browser, after the server could not reach it',
-            direct: 'Not read, framed directly',
-            server: 'Server, as X’s crawler',
-          }[props.from],
+          'Status',
+          page ? (
+            <span {...styles.status()}>
+              <Level level={page.status < 400 ? 'pass' : 'fail'} />
+              {page.status}
+            </span>
+          ) : (
+            '–'
+          ),
         ],
-        ['User agent', report.userAgent ?? 'Browser default'],
+        ['User agent', props.report.userAgent ?? 'Browser default'],
         ['Content type', page?.headers['content-type'] ?? '–'],
-        ['Player', report.card.player ?? '–'],
-        [
-          'Player status',
-          report.player
-            ? `${report.player.status} in ${report.player.duration}ms`
-            : 'Same document as the page',
-        ],
-        [
-          'Image',
-          report.image
-            ? `${report.image.status}, ${size(report.image.bytes)}, ${report.image.headers['content-type'] ?? 'unknown type'}`
-            : '–',
-        ],
       ]}
     />
   )
 }
 
 declare namespace Request {
-  type Props = {
-    from: Extract<Preview.State, { status: 'ready' }>['from']
-    report: Preview.Report
-  }
+  type Props = { report: Preview.Report }
 }
 
 function Headers(props: Headers.Props) {
@@ -494,7 +447,7 @@ function Facts(props: Facts.Props) {
 
 declare namespace Facts {
   type Props = {
-    entries: readonly (readonly [string, string])[]
+    entries: readonly (readonly [string, ReactNode])[]
     mono?: boolean | undefined
   }
 }
@@ -556,56 +509,64 @@ namespace styles {
     padding: 4,
   })
 
-  export const bar = style({
-    alignItems: 'center',
+  export const composer = style({
+    borderBottom: '1px solid',
+    borderBottomColor: 'gray.400',
     display: 'flex',
-    gap: 2,
-  })
-
-  export const iconButton = style({
-    alignItems: 'center',
-    backgroundColor: 'transparent !custom',
-    border: '1px solid',
-    borderColor: 'gray.400',
-    borderRadius: '9999px !custom',
-    color: 'gray.900',
-    cursor: 'pointer',
-    display: 'inline-flex',
-    flexShrink: 0,
-    height: 10,
-    justifyContent: 'center',
-    width: 10,
-    ':focus-visible': { outline: '2px solid', outlineColor: 'blue.600' },
-    ':hover': { color: 'foreground' },
-  })
-
-  export const address = style({
-    alignItems: 'center',
-    backgroundColor: 'gray.100',
-    border: '1px solid',
-    borderColor: 'gray.400',
-    borderRadius: '9999px !custom',
-    color: 'gray.800',
-    display: 'flex',
-    flexGrow: 1,
-    gap: 2,
-    height: 10,
-    minWidth: 0,
+    gap: 3,
+    paddingBottom: 3,
     paddingLeft: 4,
     paddingRight: 4,
-    ':focus-within': { borderColor: 'blue.600' },
+    paddingTop: 4,
   })
 
   export const input = style({
     backgroundColor: 'transparent !custom',
     border: 'none',
     color: 'foreground',
-    flexGrow: 1,
-    fontFamily: 'mono',
-    minWidth: 0,
+    fontSize: '2xl',
     outline: 'none',
-    typography: 'copy.14',
-    '::placeholder': { color: 'gray.800', fontFamily: 'sans' },
+    paddingBottom: 4,
+    paddingTop: 1,
+    width: '100% !custom',
+    '::placeholder': { color: 'gray.800' },
+  })
+
+  export const toolbar = style({
+    alignItems: 'center',
+    display: 'flex',
+    gap: 3,
+    justifyContent: 'space-between',
+  })
+
+  export const tools = style({
+    alignItems: 'center',
+    color: 'blue.600',
+    display: 'flex',
+    gap: 3,
+  })
+
+  export const tool = style({
+    alignItems: 'center',
+    backgroundColor: 'transparent !custom',
+    border: 'none',
+    borderRadius: '9999px !custom',
+    color: 'blue.600',
+    cursor: 'pointer',
+    display: 'inline-flex',
+    height: 9,
+    justifyContent: 'center',
+    marginLeft: '-8px !custom',
+    width: 9,
+    ':focus-visible': { outline: '2px solid', outlineColor: 'blue.600' },
+    ':hover': { backgroundColor: 'rgb(29 155 240 / 0.1) !custom' },
+  })
+
+  export const hint = style({
+    alignItems: 'center',
+    display: 'inline-flex',
+    gap: 2,
+    typography: 'copy.13',
   })
 
   export const button = style({
@@ -789,10 +750,7 @@ namespace styles {
     paddingTop: 3,
   })
 
-  export const metricValue = style({
-    fontFamily: 'mono',
-    typography: 'copy.16',
-  })
+  export const metricValue = style({ typography: 'heading.20' })
 
   export const metricLabel = style({ color: 'gray.800', typography: 'copy.13' })
 
@@ -879,29 +837,12 @@ namespace styles {
     },
   })
 
-  export const tokens = style({ display: 'flex', flexWrap: 'wrap', gap: 2 })
-
-  export const token = variants({
-    base: {
-      border: '1px solid',
-      borderRadius: '9999px !custom',
-      fontFamily: 'mono',
-      paddingBottom: 1,
-      paddingLeft: 2,
-      paddingRight: 2,
-      paddingTop: 1,
-      typography: 'copy.13',
-    },
-    variants: {
-      granted: {
-        false: {
-          borderColor: 'gray.400',
-          color: 'gray.700',
-          textDecoration: 'line-through',
-        },
-        true: { borderColor: 'green.700', color: 'green.900' },
-      },
-    },
+  export const status = style({
+    alignItems: 'center',
+    color: 'green.900',
+    display: 'inline-flex',
+    gap: 1,
+    '@media (min-width: 40rem)': { justifyContent: 'flex-end' },
   })
 
   export const facts = style({

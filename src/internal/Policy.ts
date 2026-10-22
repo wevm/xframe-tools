@@ -27,27 +27,6 @@ export const noncePlaceholder = '{{nonce}}'
 export const playerPlaceholder = '{{player}}'
 
 /**
- * Sandbox tokens a document can grant. X grants a subset, and the rest are blocked
- * for the player and every popup it opens.
- */
-export const sandboxTokens = [
-  'allow-downloads',
-  'allow-forms',
-  'allow-modals',
-  'allow-orientation-lock',
-  'allow-pointer-lock',
-  'allow-popups',
-  'allow-popups-to-escape-sandbox',
-  'allow-presentation',
-  'allow-same-origin',
-  'allow-scripts',
-  'allow-storage-access-by-user-activation',
-  'allow-top-navigation',
-  'allow-top-navigation-by-user-activation',
-  'allow-top-navigation-to-custom-protocols',
-] as const
-
-/**
  * Outer iframe attributes from X's web client (`abs.twimg.com/x-web`). The timeline
  * renders this iframe around `/i/cards-frame/<postId>` without a sandbox.
  */
@@ -193,22 +172,6 @@ export declare namespace render {
     headers: Headers
     /** Document markup. */
     markup: string
-  }
-}
-
-/** Splits a sandbox attribute into granted and blocked tokens. */
-export function tokens(sandbox: string): tokens.ReturnType {
-  const granted = new Set(sandbox.split(/\s+/).filter(Boolean))
-  return {
-    blocked: sandboxTokens.filter((token) => !granted.has(token)),
-    granted: sandboxTokens.filter((token) => granted.has(token)),
-  }
-}
-
-export declare namespace tokens {
-  type ReturnType = {
-    blocked: readonly string[]
-    granted: readonly string[]
   }
 }
 

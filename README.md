@@ -29,7 +29,7 @@ flowchart LR
 
 ## Usage
 
-Open the devtools, then paste a page URL or a player URL. The URL also loads from the query string:
+Open the devtools, then paste a page URL or a player URL into the composer above the post. The URL also loads from the query string:
 
 ```
 http://localhost:3000/__xframe/?url=https://nanocode.xyz/cloudflare
@@ -39,8 +39,7 @@ The server reads the page's card tags with X's crawler user agent, `Twitterbot/1
 
 - **Metrics:** response time, and the sizes of the page, the player document, and the poster image.
 - **Checks:** what X would render, including whether the player's `X-Frame-Options` or `frame-ancestors` lets x.com frame it.
-- **Frame policy:** the sandbox tokens that X grants and blocks, and the frame's `allow` list.
-- **Network:** request and headers tabs, with the status, redirects, user agent, and the player's response headers that affect framing.
+- **Network:** request and headers tabs, with the status, user agent, and the player's response headers that affect framing.
 
 ### Local Players
 

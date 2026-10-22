@@ -103,7 +103,7 @@ Applies to documentation, comments, TSDoc, commit messages, and pull requests.
 ## UI Conventions
 
 - Name route page components `Page` and register them with `component: Page`.
-- The page uses X's dark scheme. An address bar spans the top. The left column renders the post and its card as X's timeline does, without X's navigation sidebar or trending column. The right column is the inspector, a stack of cards: response metrics, checks, the frame policy, and a network card with request and headers tabs. Below `64rem` the columns stack.
+- The page uses X's dark scheme. The left column renders X's composer, which takes the URL, above the post and its card, as X's timeline does, without X's navigation sidebar or trending column. The right column is the inspector, a stack of cards: response metrics, checks, and a network card with request and headers tabs. Below `64rem` the columns stack.
 - Screens in `src/app/screens/` take data and handlers as props. Routes own loading and navigation.
 - Prefer `zyzz/default` variables and typography tokens. Write a value with ` !custom` only when no default token expresses the design.
 - Group a module's styles in `namespace styles` at the bottom of the file, with `styles.card()` at application sites. Separate adjacent `style` definitions with one blank line.
