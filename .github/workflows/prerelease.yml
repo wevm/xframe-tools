@@ -1,0 +1,21 @@
+name: Prerelease
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Clone repository
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        uses: ./.github/actions/install-dependencies
+
+      # `zile publish:prepare` writes the manifest that npm receives, so the prerelease matches a
+      # release.
+      - name: Prerelease
+        run: |
+          pnpm run build:app
+          pnpm exec zile publish:prepare
+          pnpm dlx pkg-pr-new publish --pnpm
