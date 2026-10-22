@@ -558,20 +558,24 @@ namespace styles {
     ':hover': { backgroundColor: 'rgb(29 155 240 / 0.1) !custom' },
   })
 
+  // X's Post button: 36px tall, 16px side padding, bold 15px label.
   export const button = style({
-    backgroundColor: 'foreground',
+    backgroundColor: '#eff3f4 !custom',
     border: 'none',
     borderRadius: '9999px !custom',
-    color: 'background.primary',
+    color: '#0f1419 !custom',
     cursor: 'pointer',
     flexShrink: 0,
+    fontFamily: 'sans',
+    fontSize: '15px !custom',
     fontWeight: 'bold',
-    height: 10,
-    paddingLeft: 5,
-    paddingRight: 5,
-    typography: 'button.14',
+    height: 9,
+    lineHeight: '20px !custom',
+    paddingLeft: 4,
+    paddingRight: 4,
     ':disabled': { cursor: 'default', opacity: 0.5 },
     ':focus-visible': { outline: '2px solid', outlineColor: 'blue.600' },
+    ':hover': { backgroundColor: '#d7dbdc !custom' },
   })
 
   export const columns = style({
